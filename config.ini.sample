@@ -1,4 +1,7 @@
 [pullhook]
-#basedir=/var/www
 #listen_host=1.2.3.4
-#listen_port=80
+#listen_port=8080
+[GithubRepoName1]
+basedir=/path/to/app1
+[GithubRepoName2]
+basedir=/path/to/app2

@@ -10,7 +10,7 @@ import logging
 
 __author__ = 'talpah@gmail.com'
 
-from bottle import route, request, run
+from bottle import route, request, run, abort
 import git
 import os
 
@@ -22,12 +22,12 @@ MYDIR = os.path.dirname(os.path.abspath(__file__))
  Use config.ini to override
 """
 DEFAULT_CONFIG = {
-    'basedir': MYDIR,  # Default path for git pull
     'listen_host': '0.0.0.0',  # IP to listen on; Defaults to all interfaces
     'listen_port': '7878',  # Port to listen to
 }
 
-CONFIG = {}
+MAIN_CONFIG = {}
+REPOS_CONFIG = {}
 
 
 def init():
@@ -35,15 +35,22 @@ def init():
     Read config file
 
     """
-    global CONFIG
+    global MAIN_CONFIG
     config_file = os.path.join(MYDIR, 'config.ini')
     if not os.path.isfile(config_file):
-        CONFIG = DEFAULT_CONFIG
-        logging.info('No config file found at "%s", using defaults' % config_file)
+        raise Exception('Config file "%s" not found. Exiting.' % config_file)
     else:
-        parser = SafeConfigParser(DEFAULT_CONFIG)
+        parser = SafeConfigParser()
         parser.read(config_file)
-        CONFIG = dict(parser.items('pullhook'))
+        MAIN_CONFIG = dict(DEFAULT_CONFIG.items() + dict(parser.items('pullhook')).items())
+        sections = parser.sections()
+        if len(sections) < 2:
+            raise Exception('No applications defined. See "config.ini.sample" for howto.')
+        global REPOS_CONFIG
+        for repo in sections:
+            if repo != 'pullhook':
+                REPOS_CONFIG[repo] = dict(parser.items(repo))
+        logging.debug('Found %d repos in config.' % len(REPOS_CONFIG))
 
 
 @route('/', method=['POST'])
@@ -56,19 +63,31 @@ def handle_payload():
     event = request.get_header('X-GitHub-Event')
     logging.debug("Received event: %s" % event)
     if event == 'push':
+        """ Parse repo name from push data ref """
+        pushed_repo = data['repository']['name']
         """ Parse branch name from push data ref """
         pushed_branch = data['ref'].split('/')[-1]
-        logging.debug("Received push event in branch %s" % pushed_branch)
+        logging.debug("Received push event from repo %s in branch %s" % (pushed_repo, pushed_branch))
+
+        if pushed_repo not in REPOS_CONFIG:
+            logging.warning('Repo "%s" is not configured on our end. Skipping.' % pushed_repo)
+            abort(404, 'Not configured: %s' % pushed_repo)
+        configured_repo = REPOS_CONFIG[pushed_repo]
+
         """ Use GitPython """
-        g = git.Git(CONFIG['basedir'])
+        g = git.Git(configured_repo['basedir'])
         """ Get active branch """
         branch = g.rev_parse('--abbrev-ref', 'HEAD')
-        logging.debug("We're on branch %s" % branch)
+        logging.debug("Repo \"%s\", branch \"%s\"" % (configured_repo['basedir'], branch))
         if pushed_branch == branch:
-            logging.debug("Pulling repo in %s" % CONFIG['basedir'])
+            logging.debug("Pulling new commits.")
             g.pull()
+        else:
+            logging.debug('Branches are not corresponding: "%s" (local) and "%s" (remote). Skipping.' % (branch, pushed_branch))
+            # no abort here
 
 
 if __name__ == '__main__':
+    # logging.basicConfig(level=logging.DEBUG)  # Uncomment this for debug
     init()
-    run(host=CONFIG['listen_host'], port=CONFIG['listen_port'], debug=True)
+    run(host=MAIN_CONFIG['listen_host'], port=MAIN_CONFIG['listen_port'], debug=True)
