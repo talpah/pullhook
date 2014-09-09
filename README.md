@@ -22,6 +22,4 @@ You need to create a webhook in Github for the repo you want and point the paylo
 When a "push" event is received and the "push" branch corresponds to the active branch of the BASE_DIR (default is the script's directory), a "git pull" is initiated.
 
 ## Configuration
-  - `BASE_DIR` Holds the path to the clone which will be updated
-  - `host='0.0.0.0'` Interface to bind to
-  - `port=7878` Port to listen to
+Create a `config.ini` by copying `config.ini.sample` and edit it to suit your needs.
