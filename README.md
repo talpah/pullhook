@@ -23,3 +23,4 @@ When a "push" event is received and the "push" branch corresponds to the active 
 
 ## Configuration
 Create a `config.ini` by copying `config.ini.sample` and edit it to suit your needs.
+Omitted/Commented out options are ignored and defaults are used instead.
