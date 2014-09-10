@@ -1,4 +1,5 @@
 [pullhook]
+#debug=true
 #listen_host=1.2.3.4
 #listen_port=8080
 [GithubRepoName1]
