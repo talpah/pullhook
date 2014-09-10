@@ -6,6 +6,7 @@ Pull a repo on push, via Github webhook
 ## Requirements
 - GitPython
 - bottle
+- tendo
 
 Install via `pip`:
 ```pip install -r requirements.txt```
@@ -23,4 +24,4 @@ When a "push" event is received and the "push" branch corresponds to the active 
 
 ## Configuration
 Create a `config.ini` by copying `config.ini.sample` and edit it to suit your needs.
-Omitted/Commented out options are ignored and defaults are used instead.
+Omitted/Commented out options are ignored and the default values in `pullhook.py` are used instead.
