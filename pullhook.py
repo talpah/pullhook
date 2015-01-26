@@ -58,7 +58,6 @@ def init():
     else:
         parser = SafeConfigParser()
         parser.read(config_file)
-        print parser.sections()
         MAIN_CONFIG = dict(DEFAULT_CONFIG.items() + dict(parser.items('pullhook')).items())
         if MAIN_CONFIG['debug'].lower() in ['true', 'yes', '1', 'on']:
             logger.setLevel(logging.DEBUG)
