@@ -5,11 +5,10 @@
         Feel free to bind the server to any ip and port you desire
         just make sure it's accessible by GitHub
 """
-from ConfigParser import SafeConfigParser
-import logging
-
 __author__ = 'talpah@gmail.com'
 
+from ConfigParser import SafeConfigParser
+import logging
 import bottle
 from tendo import singleton
 import git
@@ -64,12 +63,27 @@ def init():
             logger.setLevel(logging.DEBUG)
         sections = parser.sections()
         if len(sections) < 2:
-            raise Exception('No applications defined. See "config.ini.sample" for howto.')
+            raise Exception(
+                'Configuration error: No applications defined. Create "config.ini". See "config.ini.sample" for howto.')
         global REPOS_CONFIG
-        for repo in sections:
-            if repo != 'pullhook':
-                REPOS_CONFIG[repo] = dict(parser.items(repo))
+        for app_name in sections:
+            if app_name != 'pullhook':
+                config = dict(parser.items(app_name))
+                if 'basedir' not in config:
+                    raise Exception(
+                        'Configuration error: "%s" application is missing the "basedir" key.' % app_name)
+                REPOS_CONFIG[app_name] = config
         logger.debug('Found %d repos in config.' % len(REPOS_CONFIG))
+
+
+def run_command(command):
+    if isinstance(command, str):
+        command = command.split(' ')
+    from subprocess import check_output
+
+    logger.debug('Running %s' % ' '.join(command))
+    out = check_output(command)
+    logger.debug('Output: %s' % out)
 
 
 @bottle.route('/', method=['POST'])
@@ -86,12 +100,18 @@ def handle_payload():
         pushed_repo = data['repository']['name']
         """ Parse branch name from push data ref """
         pushed_branch = data['ref'].split('/')[-1]
+
+        pushed_w_branch = '%s:%s' % (pushed_repo, pushed_branch)
         logger.debug("Received push event from repo %s in branch %s" % (pushed_repo, pushed_branch))
 
-        if pushed_repo not in REPOS_CONFIG:
+        if pushed_w_branch in REPOS_CONFIG:
+            configured_repo = REPOS_CONFIG[pushed_w_branch]
+        elif pushed_repo in REPOS_CONFIG:
+            configured_repo = REPOS_CONFIG[pushed_repo]
+        else:
             logger.warning('Repo "%s" is not configured on our end. Skipping.' % pushed_repo)
             bottle.abort(404, 'Not configured: %s' % pushed_repo)
-        configured_repo = REPOS_CONFIG[pushed_repo]
+            return
 
         """ Use GitPython """
         g = git.Git(configured_repo['basedir'])
@@ -101,6 +121,11 @@ def handle_payload():
         if pushed_branch == branch:
             logger.debug("Pulling new commits.")
             g.pull()
+            if 'run' in configured_repo:
+                try:
+                    run_command(configured_repo['run'])
+                except Exception:
+                    pass
         else:
             logger.debug(
                 'Branches are not corresponding: "%s" (local) and "%s" (remote). Skipping.' % (branch, pushed_branch))

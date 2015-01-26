@@ -1,8 +1,17 @@
 [pullhook]
-#debug=true
-#listen_host=1.2.3.4
-#listen_port=8080
-[GithubRepoName1]
+# General settings
+#debug=false
+#listen_host=0.0.0.0
+#listen_port=7878
+
+[RepoName1:branch]
+# ^^^^^^^^^^^^^^  This is composed of repo name and (optionally) branch name, separated by a colon
+# basedir:  [required] the full path to where the repo is cloned
 basedir=/path/to/app1
-[GithubRepoName2]
+# run:      [optional] command to run after *EACH* pull
+run=service uwsgi reload app1
+
+[RepoName2]
+# ^^^^^^^  If no branch is specified, it will catch all branches pushes for that repo
 basedir=/path/to/app2
+#run=service uwsgi reload app2
