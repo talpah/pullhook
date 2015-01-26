@@ -58,16 +58,22 @@ def init():
     else:
         parser = SafeConfigParser()
         parser.read(config_file)
+        print parser.sections()
         MAIN_CONFIG = dict(DEFAULT_CONFIG.items() + dict(parser.items('pullhook')).items())
         if MAIN_CONFIG['debug'].lower() in ['true', 'yes', '1', 'on']:
             logger.setLevel(logging.DEBUG)
         sections = parser.sections()
         if len(sections) < 2:
-            raise Exception('No applications defined. See "config.ini.sample" for howto.')
+            raise Exception(
+                'Configuration error: No applications defined. Create "config.ini". See "config.ini.sample" for howto.')
         global REPOS_CONFIG
-        for repo in sections:
-            if repo != 'pullhook':
-                REPOS_CONFIG[repo] = dict(parser.items(repo))
+        for app_name in sections:
+            if app_name != 'pullhook':
+                config = dict(parser.items(app_name))
+                if 'basedir' not in config:
+                    raise Exception(
+                        'Configuration error: "%s" application is missing the "basedir" key.' % app_name)
+                REPOS_CONFIG[app_name] = config
         logger.debug('Found %d repos in config.' % len(REPOS_CONFIG))
 
 
@@ -95,12 +101,18 @@ def handle_payload():
         pushed_repo = data['repository']['name']
         """ Parse branch name from push data ref """
         pushed_branch = data['ref'].split('/')[-1]
+
+        pushed_w_branch = '%s:%s' % (pushed_repo, pushed_branch)
         logger.debug("Received push event from repo %s in branch %s" % (pushed_repo, pushed_branch))
 
-        if pushed_repo not in REPOS_CONFIG:
+        if pushed_repo in REPOS_CONFIG:
+            configured_repo = REPOS_CONFIG[pushed_repo]
+        elif pushed_w_branch in REPOS_CONFIG:
+            configured_repo = REPOS_CONFIG[pushed_w_branch]
+        else:
             logger.warning('Repo "%s" is not configured on our end. Skipping.' % pushed_repo)
             bottle.abort(404, 'Not configured: %s' % pushed_repo)
-        configured_repo = REPOS_CONFIG[pushed_repo]
+            return
 
         """ Use GitPython """
         g = git.Git(configured_repo['basedir'])
