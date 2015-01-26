@@ -105,10 +105,10 @@ def handle_payload():
         pushed_w_branch = '%s:%s' % (pushed_repo, pushed_branch)
         logger.debug("Received push event from repo %s in branch %s" % (pushed_repo, pushed_branch))
 
-        if pushed_repo in REPOS_CONFIG:
-            configured_repo = REPOS_CONFIG[pushed_repo]
-        elif pushed_w_branch in REPOS_CONFIG:
+        if pushed_w_branch in REPOS_CONFIG:
             configured_repo = REPOS_CONFIG[pushed_w_branch]
+        elif pushed_repo in REPOS_CONFIG:
+            configured_repo = REPOS_CONFIG[pushed_repo]
         else:
             logger.warning('Repo "%s" is not configured on our end. Skipping.' % pushed_repo)
             bottle.abort(404, 'Not configured: %s' % pushed_repo)
