@@ -5,11 +5,10 @@
         Feel free to bind the server to any ip and port you desire
         just make sure it's accessible by GitHub
 """
-from ConfigParser import SafeConfigParser
-import logging
-
 __author__ = 'talpah@gmail.com'
 
+from ConfigParser import SafeConfigParser
+import logging
 import bottle
 from tendo import singleton
 import git
@@ -72,6 +71,16 @@ def init():
         logger.debug('Found %d repos in config.' % len(REPOS_CONFIG))
 
 
+def run_command(command):
+    if isinstance(command, str):
+        command = command.split(' ')
+    from subprocess import check_output
+
+    logger.debug('Running %s' % ' '.join(command))
+    out = check_output(command)
+    logger.debug('Output: %s' % out)
+
+
 @bottle.route('/', method=['POST'])
 def handle_payload():
     """
@@ -101,6 +110,11 @@ def handle_payload():
         if pushed_branch == branch:
             logger.debug("Pulling new commits.")
             g.pull()
+            if 'run' in configured_repo:
+                try:
+                    run_command(configured_repo['run'])
+                except Exception:
+                    pass
         else:
             logger.debug(
                 'Branches are not corresponding: "%s" (local) and "%s" (remote). Skipping.' % (branch, pushed_branch))
