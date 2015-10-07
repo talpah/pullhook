@@ -5,23 +5,30 @@ Pull a repo on push, via Github webhook
 
 ## Requirements
 - GitPython
-- bottle
+- PyYaml
 - tendo
+- bottle
+- awesome-slugify
 
-Install via `pip`:
+
+Install them via `pip`:
 ```pip install -r requirements.txt```
 
 
-## Usage
+## Simple mode 
 
 `python pullhook.py`
 
-By default it listens on all interfaces on port 7878. 
-
-You need to create a webhook in Github for the repo you want and point the payload url to the ip and port where the script is running. No secret is required. Yet.
-
-When a "push" event is received and the "push" branch corresponds to the active branch of the BASE_DIR (default is the script's directory), a "git pull" is initiated.
+## Always on mode
+Add a cronjob to run each minute the `pulhook.py` script. Tendo is used to ensure we only run a single instance.
 
 ## Configuration
-Create a `config.ini` by copying `config.ini.sample` and edit it to suit your needs.
-Commented out options are the defaults. Documentation provided inline inside [config.ini.sample](config.ini.sample)
+Copy `config.yml.sample` as `config.yml` and edit it to suit your needs. Explanations are included in comments in the sample config file.
+
+-----
+
+You need to create a webhook in Github (https://github.com/`user`/`repo`/settings/hooks/new) for the repo you want 
+and point the payload url to the ip and port where the script is running. No secret is required. Yet.
+
+When a "push" event is received, the received repository and branch names are checked against directories matched from the configured settings.
+
