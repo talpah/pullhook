@@ -201,22 +201,23 @@ def update_project(configured_repo):
     r = Repo(configured_repo['basedir'])
 
     try:
-        execute_command(configured_repo['run_before'])
+        execute_command(configured_repo['run_before'], configured_repo)
     except Exception:
         pass
     r.remotes.origin.pull()
     try:
-        execute_command(configured_repo['run_after'])
+        execute_command(configured_repo['run_after'], configured_repo)
     except Exception:
         pass
 
 
-def execute_command(command):
+def execute_command(command, app_config):
     """
     Used for running app pre/post commands
     :param command: the command to run
     """
     if isinstance(command, str):
+        command = command.format(**app_config)
         command = command.split(' ')
     from subprocess import check_output
 
