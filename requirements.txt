@@ -1,3 +1,5 @@
 GitPython
 bottle
 tendo
+PyYaml
+awesome-slugify

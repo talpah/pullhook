@@ -1,0 +1,31 @@
+listen: # bind to the ip and port specified below
+  ip: 0.0.0.0
+  port: 7878
+
+#debug: true # enable debug mode
+
+paths:
+
+  # This is a static path, will respond to pushes for pulhook.git and branch master
+  - /var/www/pulhook:
+      repo: pulhook
+      branch: master # optional, if omitted will check if pushed branch matches local branch
+      run_before: # optional command to run before pulling
+      run_after: # optional command to run after pulling
+
+  # This is a dynamic path: we will try to match subdirectories found
+  # in here to combinations of repo name and branch name (see path_possibilities below)
+  - /var/www/app:
+      auto: true # tries to guess subdirectory based on repo/branch combinations
+      run_before: # commands work here as well
+      run_after: # another command
+
+# Combinations for auto mode;
+path_possibilities:
+  - "{repo}"
+  - "{reposlug}-{branchslug}"
+  - "{branchslug}"
+  - "{repo}/{branch}"
+  - "{repo}_{branch}"
+  - "{repo}-{branch}"
+  - "{branch}"
