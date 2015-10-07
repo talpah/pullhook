@@ -7,7 +7,7 @@ listen: # bind to the ip and port specified below
 paths:
 
   # This is a static path, will respond to pushes for pulhook.git and branch master
-  - /var/www/pulhook:
+  - /var/www/pullhook:
       repo: pulhook
       branch: master # optional, if omitted will check if pushed branch matches local branch
       run_before: # optional command to run before pulling
