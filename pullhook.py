@@ -13,6 +13,7 @@ from lib import logger, run_application, update_project, \
 
 __author__ = 'talpah@gmail.com'
 
+bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024 
 
 @bottle.route('/', method=['POST'])
 def handle_payload():
