@@ -4,7 +4,6 @@ Lib
 """
 import logging
 from subprocess import CalledProcessError, STDOUT
-
 from git.repo import Repo
 import os
 import bottle
@@ -146,13 +145,16 @@ def get_matching_in_auto_mode(repo, branch):
                           for c in path_possibilities]
 
     matches = []
+    matched_paths = []
     for auto_path, auto_config in AUTO_REPOS.items():
         for path in path_possibilities:
-            if os.path.isdir(os.path.join(auto_path, path)):
+            test_path = os.path.join(auto_path, path)
+            if os.path.isdir(test_path) and test_path not in matched_paths:
                 repocheck = repo_config.copy()
                 repocheck.update(auto_config)
-                repocheck['basedir'] = os.path.join(auto_path, path)
+                repocheck['basedir'] = test_path
                 if check_match(repocheck, repo, branch):
+                    matched_paths.append(test_path)
                     matches.append(repocheck)
     return matches
 
@@ -214,6 +216,7 @@ def update_project(configured_repo):
 def execute_command(command, app_config):
     """
     Used for running app pre/post commands
+    :param app_config:
     :param command: the command to run
     """
     if isinstance(command, str):
