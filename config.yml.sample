@@ -3,6 +3,7 @@ listen: # bind to the ip and port specified below
   port: 7878
 
 #debug: true # enable debug mode
+logfile: /var/log/pullhook.log
 
 paths:
 

@@ -7,13 +7,13 @@
 """
 import bottle
 from tendo import singleton
-
 from lib import logger, run_application, update_project, \
     get_matching_projects
 
 __author__ = 'talpah@gmail.com'
 
-bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024 
+bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
+
 
 @bottle.route('/', method=['POST'])
 def handle_payload():

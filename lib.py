@@ -28,7 +28,8 @@ class Config(dict):
 
 
 logger = logging.getLogger("pullhook")
-logger.addHandler(logging.StreamHandler())
+_initial_log_handler = logging.StreamHandler()
+logger.addHandler(_initial_log_handler)
 
 CONFIG_FILE = os.path.realpath(os.path.join(os.path.dirname(__file__), 'config.yml'))
 if not os.path.exists(CONFIG_FILE):
@@ -42,8 +43,17 @@ except TypeError:
     logger.fatal("Invalid config.yml. Use 'config.yml.sample' as guide.")
     sys.exit(20)
 
+if config.logfile:
+    _file_log_handler = logging.FileHandler(config.logfile)
+    _file_log_formatter = logging.Formatter('%(asctime)s - %(name)s - [%(levelname)s] - %(message)s')
+    _file_log_handler.setFormatter(_file_log_formatter)
+    logger.addHandler(_file_log_handler)
+    logger.removeHandler(_initial_log_handler)
+
 if 'debug' in config and config.debug:
     logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.WARNING)
 
 
 def run_application():
