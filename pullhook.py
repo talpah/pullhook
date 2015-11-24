@@ -5,14 +5,32 @@
         Feel free to bind the server to any ip and port you desire
         just make sure it's accessible by GitHub
 """
+import os
+import pwd
+
 import bottle
 from tendo import singleton
+
 from lib import logger, run_application, update_project, \
-    get_matching_projects
+    get_matching_projects, config
 
 __author__ = 'talpah@gmail.com'
 
 bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
+
+"""
+Run as different user
+http://stackoverflow.com/a/1499386
+"""
+if config.runas:
+    try:
+        uid = pwd.getpwnam(config.runas)[2]
+        os.setuid(uid)
+        logger.info('Running as: {}'.format(config.runas))
+    except OSError as e:
+        logger.warning('Cannot run as {}: {}'.format(config.runas, e.strerror))
+        username = pwd.getpwuid(os.getuid()).pw_name
+        logger.info('Running as: {}'.format(username))
 
 
 @bottle.route('/', method=['POST'])

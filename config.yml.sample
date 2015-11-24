@@ -2,6 +2,9 @@ listen: # bind to the ip and port specified below
   ip: 0.0.0.0
   port: 7878
 
+
+#runas: www-data # Run as a different user (only works if setuid is allowed -- root or sudo)
+
 #debug: true # enable debug mode
 logfile: /var/log/pullhook.log
 
